@@ -1,3 +1,6 @@
+// https://collectiveidea.com/blog/archives/2017/04/05/arduino-programming-in-vim
+
+
 unsigned long previousMillis = 0;
 const long detectMotionInterval = 100;
 const long programInterval = 100;
@@ -98,6 +101,7 @@ void loop () {
       digitalWrite(ledGpin, LOW);
       digitalWrite(ledBpin, LOW);
 
+      // TODO desiccate this shit
   } else if (currentState == 3) {
       // get G value while showing it
 
