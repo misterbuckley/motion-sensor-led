@@ -1,13 +1,15 @@
 // https://collectiveidea.com/blog/archives/2017/04/05/arduino-programming-in-vim
 
-// the minimum distance you must place your hand to sense input in cm
-// any closer than this sets the value to 0
-const float MINIMUM_DISTANCE_FROM_SENSOR = 5.0;
+// if the sensor detects something this close or closer, LED will turn on
+const float ACTIVATION_DISTANCE = 10.0;
 
-// the range over which the distance matters
-// with a range of 10.0, each centimeter = 10% brightness
+// the minimum distance you must place your hand when getting input
+// any closer than this sets the value to 0
+const float MINIMUM_INPUT_DISTANCE = 5.0;
+
+// the range over which the distance matters when taking input
 // with a range of 20.0, each centimeter = 5% brightness
-// TODO maybe change this to a MAXIMUM_DISTANCE_FROM_SENSOR instead
+// if your hand >= MINIMUM_INPUT_DISTANCE + SENSOR_RANGE cm away from the sensor, brightness will be 100%
 const float SENSOR_RANGE = 20.0;
 
 const unsigned long INTERVAL_LED_SHOULD_STAY_LIT_FOR = 2 * 1000; // 2 seconds
@@ -30,7 +32,7 @@ int ledBpin = 11;
 float ledRvalue = 255;
 float ledGvalue = 255;
 float ledBvalue = 255;
-unsigned long timeLedWasTurnedOn = 0;
+unsigned long timeLEDWasTurnedOn = 0;
 
 const long programInterval = 100;
 unsigned long currentTime;
@@ -61,43 +63,53 @@ void loop () {
 
   listenForButtonPress();
 
-  // TODO maybe move this to a handleCurrentState() function
-  if (currentState == LED_OFF) {
-    if (getDistance() < 10) {
-      turnLedOn();
-    }
+  switch (currentState) {
+    case LED_OFF:
+      if (getDistance() < ACTIVATION_DISTANCE) {
+        turnLEDOn();
+      }
 
-  } else if (currentState == LED_ON) {
-    if (currentTime - timeLedWasTurnedOn < INTERVAL_LED_SHOULD_STAY_LIT_FOR) return;
+      break;
 
-    turnLedOff();
+    case LED_ON:
+      if (currentTime - timeLEDWasTurnedOn >= INTERVAL_LED_SHOULD_STAY_LIT_FOR) {
+        turnLEDOff();
+      }
 
-  } else if (currentState == GET_R) {
-    float newRvalue = askForColorInput();
+      break;
 
-    setLED(newRvalue, 0, 0);
+    case GET_R:
+      float newRvalue = askForColorInput();
 
-    ledRvalue = newRvalue;
+      setLED(newRvalue, 0, 0);
 
-  } else if (currentState == GET_G) {
-    float newGvalue = askForColorInput();
+      ledRvalue = newRvalue;
 
-    setLED(0, newGvalue, 0);
+      break;
 
-    ledGvalue = newGvalue;
+    case GET_G:
+      float newGvalue = askForColorInput();
 
-  } else if (currentState == GET_B) {
-    float newBvalue = askForColorInput();
+      setLED(0, newGvalue, 0);
 
-    setLED(0, 0, newBvalue);
+      ledGvalue = newGvalue;
 
-    ledBvalue = newBvalue;
+      break;
+
+    case GET_B:
+      float newBvalue = askForColorInput();
+
+      setLED(0, 0, newBvalue);
+
+      ledBvalue = newBvalue;
+
+      break;
   }
 
   delay(programInterval);
 }
 
-long getDistance () {
+float getDistance () {
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
 
@@ -107,7 +119,7 @@ long getDistance () {
   digitalWrite(trigPin, LOW);
 
   long duration = pulseIn(echoPin, HIGH);
-  long distance = duration / 58.2; // distance in cm
+  float distance = duration / 58.2; // distance in cm
 
   return distance;
 }
@@ -118,15 +130,15 @@ void setLED (float r, float g, float b) {
   analogWrite(ledBpin, b);
 }
 
-void turnLedOn () {
+void turnLEDOn () {
   setLED(ledRvalue, ledGvalue, ledBvalue);
 
-  timeLedWasTurnedOn = millis();
+  timeLEDWasTurnedOn = millis();
 
   currentState = LED_ON;
 }
 
-void turnLedOff () {
+void turnLEDOff () {
   setLED(0, 0, 0);
 
   currentState = LED_OFF;
@@ -134,8 +146,7 @@ void turnLedOff () {
 
 float askForColorInput () {
   // TODO figure out if i can get rid of this (float) (float) shit
-  // TODO also maybe break this up a bit to make the math clearer ?
-  float inputValue = (float)((float)((getDistance() - MINIMUM_DISTANCE_FROM_SENSOR) / SENSOR_RANGE) * 256.0) - 1.0;
+  float inputValue = (float)((float)((getDistance() - MINIMUM_INPUT_DISTANCE) / SENSOR_RANGE) * 256.0) - 1.0;
 
   if (inputValue > 255) inputValue = 255;
   if (inputValue < 0) inputValue = 0;
@@ -157,15 +168,22 @@ void switchState () {
     case LED_OFF:
     case LED_ON:
       currentState = GET_R;
+
       break;
+
     case GET_R:
       currentState = GET_G;
+
       break;
+
     case GET_G:
       currentState = GET_B;
+
       break;
+
     case GET_B:
       currentState = LED_OFF;
+
       break;
   }
 }
