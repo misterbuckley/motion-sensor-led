@@ -1,12 +1,13 @@
 // https://collectiveidea.com/blog/archives/2017/04/05/arduino-programming-in-vim
 
 // the minimum distance you must place your hand to sense input in cm
-// any closer than this sets the value to LOW
+// any closer than this sets the value to 0
 const float MINIMUM_DISTANCE_FROM_SENSOR = 5.0;
 
 // the range over which the distance matters
 // with a range of 10.0, each centimeter = 10% brightness
 // with a range of 20.0, each centimeter = 5% brightness
+// TODO maybe change this to a MAXIMUM_DISTANCE_FROM_SENSOR instead
 const float SENSOR_RANGE = 20.0;
 
 const unsigned long INTERVAL_LED_SHOULD_STAY_LIT_FOR = 2 * 1000; // 2 seconds
@@ -60,6 +61,7 @@ void loop () {
 
   listenForButtonPress();
 
+  // TODO maybe move this to a handleCurrentState() function
   if (currentState == LED_OFF) {
     if (getDistance() < 10) {
       turnLedOn();
@@ -73,21 +75,21 @@ void loop () {
   } else if (currentState == GET_R) {
     float newRvalue = askForColorInput();
 
-    setLED(newRvalue, LOW, LOW);
+    setLED(newRvalue, 0, 0);
 
     ledRvalue = newRvalue;
 
   } else if (currentState == GET_G) {
     float newGvalue = askForColorInput();
 
-    setLED(LOW, newGvalue, LOW);
+    setLED(0, newGvalue, 0);
 
     ledGvalue = newGvalue;
 
   } else if (currentState == GET_B) {
     float newBvalue = askForColorInput();
 
-    setLED(LOW, LOW, newBvalue);
+    setLED(0, 0, newBvalue);
 
     ledBvalue = newBvalue;
   }
@@ -111,23 +113,9 @@ long getDistance () {
 }
 
 void setLED (float r, float g, float b) {
-  if (r == LOW || r == HIGH) {
-    digitalWrite(ledRpin, r);
-  } else {
-    analogWrite(ledRpin, r);
-  }
-
-  if (g == LOW || g == HIGH) {
-    digitalWrite(ledGpin, g);
-  } else {
-    analogWrite(ledGpin, g);
-  }
-
-  if (b == LOW || b == HIGH) {
-    digitalWrite(ledBpin, b);
-  } else {
-    analogWrite(ledBpin, b);
-  }
+  analogWrite(ledRpin, r);
+  analogWrite(ledGpin, g);
+  analogWrite(ledBpin, b);
 }
 
 void turnLedOn () {
@@ -139,16 +127,15 @@ void turnLedOn () {
 }
 
 void turnLedOff () {
-  setLED(LOW, LOW, LOW);
+  setLED(0, 0, 0);
 
   currentState = LED_OFF;
 }
 
 float askForColorInput () {
-  //  5.0 = minimum distance from sensor
-  //  20.0 = range of distance that affects sensor
-
-  float inputValue = (float)((float)((getDistance() - 5.0) / 20.0) * 256.0) - 1.0;
+  // TODO figure out if i can get rid of this (float) (float) shit
+  // TODO also maybe break this up a bit to make the math clearer ?
+  float inputValue = (float)((float)((getDistance() - MINIMUM_DISTANCE_FROM_SENSOR) / SENSOR_RANGE) * 256.0) - 1.0;
 
   if (inputValue > 255) inputValue = 255;
   if (inputValue < 0) inputValue = 0;
