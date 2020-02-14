@@ -12,7 +12,7 @@ const float MINIMUM_INPUT_DISTANCE = 5.0;
 // if your hand >= MINIMUM_INPUT_DISTANCE + SENSOR_RANGE cm away from the sensor, brightness will be 100%
 const float SENSOR_RANGE = 20.0;
 
-const unsigned long INTERVAL_LED_SHOULD_STAY_LIT_FOR = 2 * 1000; // 2 seconds
+const unsigned long INTERVAL_LED_SHOULD_STAY_LIT_FOR = 3 * 60 * 1000; // 3 minutes
 
 // TODO:
 // - hold button for a second to turn off led and then ignore the distance sensor for a few seconds to let user move hand away
@@ -32,6 +32,7 @@ int ledBpin = 11;
 float ledRvalue = 255;
 float ledGvalue = 255;
 float ledBvalue = 255;
+float newValue = 255;
 unsigned long timeLEDWasTurnedOn = 0;
 
 const long programInterval = 100;
@@ -79,29 +80,29 @@ void loop () {
       break;
 
     case GET_R:
-      float newRvalue = askForColorInput();
+      newValue = askForColorInput();
 
-      setLED(newRvalue, 0, 0);
+      setLED(newValue, 0, 0);
 
-      ledRvalue = newRvalue;
+      ledRvalue = newValue;
 
       break;
 
     case GET_G:
-      float newGvalue = askForColorInput();
+      newValue = askForColorInput();
 
-      setLED(0, newGvalue, 0);
+      setLED(0, newValue, 0);
 
-      ledGvalue = newGvalue;
+      ledGvalue = newValue;
 
       break;
 
     case GET_B:
-      float newBvalue = askForColorInput();
+      newValue = askForColorInput();
 
-      setLED(0, 0, newBvalue);
+      setLED(0, 0, newValue);
 
-      ledBvalue = newBvalue;
+      ledBvalue = newValue;
 
       break;
   }
@@ -182,7 +183,7 @@ void switchState () {
       break;
 
     case GET_B:
-      currentState = LED_OFF;
+      turnLEDOff();
 
       break;
   }
