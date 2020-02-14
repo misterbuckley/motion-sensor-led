@@ -1,4 +1,7 @@
-// https://collectiveidea.com/blog/archives/2017/04/05/arduino-programming-in-vim
+// TODO:
+// - hold button for a second to turn off led and then ignore the distance sensor for a few seconds to let user move hand away
+// - save color to chip for if the thing loses power
+// - create header files and organize the declarations here a bit better
 
 // if the sensor detects something this close or closer, LED will turn on
 const float ACTIVATION_DISTANCE = 10.0;
@@ -14,11 +17,6 @@ const float SENSOR_RANGE = 20.0;
 
 const unsigned long INTERVAL_LED_SHOULD_STAY_LIT_FOR = 3 * 60 * 1000; // 3 minutes
 
-// TODO:
-// - hold button for a second to turn off led and then ignore the distance sensor for a few seconds to let user move hand away
-// - save color to chip for if the thing loses power
-
-// TODO create header files and organize the declarations here a bit better
 int trigPin = 7;
 int echoPin = 8;
 
@@ -146,7 +144,6 @@ void turnLEDOff () {
 }
 
 float askForColorInput () {
-  // TODO figure out if i can get rid of this (float) (float) shit
   float inputValue = (float)((float)((getDistance() - MINIMUM_INPUT_DISTANCE) / SENSOR_RANGE) * 256.0) - 1.0;
 
   if (inputValue > 255) inputValue = 255;
