@@ -1,4 +1,4 @@
-# motion sensor led powered by arduino!
+# motion sensor led powered by arduino
 
 This is arduino code for an LED controlled by a distance sensor.
 
